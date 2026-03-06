@@ -85,7 +85,7 @@
 
     .odometer {
         display: flex;
-        align-items: center;
+        align-items: baseline; /* Fixes the vertical alignment */
         font-weight: 900; 
         letter-spacing: -1px;
         line-height: 1;
@@ -95,7 +95,7 @@
     #sub-odometer { font-size: clamp(50px, 11vw, 115px); }
     .small-odometer { font-size: clamp(23px, 5.5vw, 45px); }
     
-    #date-time { font-size: clamp(16px, 3.5vw, 26px); }
+    #date-time { font-size: clamp(14px, 3vw, 24px); } /* Slightly adjusted for full text length */
 
     .digit-container {
         overflow: hidden;
@@ -119,10 +119,10 @@
     }
 
     .static-char {
-        margin-top: 0.1em;
-        padding: 0 0.1em;
+        padding: 0 0.1em; /* Removed top margin to fix shift */
         text-align: center;
         font-weight: 900;
+        white-space: pre; /* Ensures spaces in full date are preserved */
     }
 
     .label {
@@ -256,7 +256,6 @@ async function fetchData() {
         const apiView = data.counters.api.viewCount;
         const estView = data.counters.estimation.viewCount;
 
-        // Logic for "Subscribers remain to next every 1m milestone"
         const nextMilestone = Math.ceil((estSub + 1) / 1000000) * 1000000;
         const remaining = nextMilestone - estSub;
 
@@ -271,11 +270,13 @@ async function fetchData() {
 
 function updateClock() {
     const now = new Date();
+    // Use 'long' for unabbreviated month and weekday names
     const options = { 
-        day: '2-digit', month: 'short', year: 'numeric',
+        weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
         hour: '2-digit', minute: '2-digit', second: '2-digit', 
         hour12: false 
     };
+    // Format: Friday, 06 March 2026, 20:14:33
     const timeString = now.toLocaleString('en-GB', options).replace(/\//g, ' ');
     updateOdometer('clock', timeString);
 }
