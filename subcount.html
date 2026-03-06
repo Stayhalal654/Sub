@@ -85,7 +85,7 @@
 
     .odometer {
         display: flex;
-        align-items: baseline; /* Fixes the vertical alignment */
+        align-items: center; /* Back to center alignment */
         font-weight: 900; 
         letter-spacing: -1px;
         line-height: 1;
@@ -95,7 +95,7 @@
     #sub-odometer { font-size: clamp(50px, 11vw, 115px); }
     .small-odometer { font-size: clamp(23px, 5.5vw, 45px); }
     
-    #date-time { font-size: clamp(14px, 3vw, 24px); } /* Slightly adjusted for full text length */
+    #date-time { font-size: clamp(14px, 3vw, 24px); } 
 
     .digit-container {
         overflow: hidden;
@@ -118,11 +118,15 @@
         font-weight: 900;
     }
 
+    /* THE FIX: Forcing static chars to match the 1.1em height of digit-containers */
     .static-char {
-        padding: 0 0.1em; /* Removed top margin to fix shift */
+        display: flex;
+        align-items: center;
+        height: 1.1em; 
+        padding: 0 0.1em; 
         text-align: center;
         font-weight: 900;
-        white-space: pre; /* Ensures spaces in full date are preserved */
+        white-space: pre; 
     }
 
     .label {
@@ -160,19 +164,19 @@
         <div class="stats-grid">
             <div class="stat-section">
                 <div id="api-sub-odometer" class="odometer small-odometer"></div>
-                <div class="label"> 📈 Subscribers (API)</div>
+                <div class="label">📈 Subscribers (API)</div>
             </div>
             <div class="stat-section">
                 <div id="api-view-odometer" class="odometer small-odometer"></div>
-                <div class="label"> 🖥 Total Views (API)</div>
+                <div class="label">🔍 Total Views (API)</div>
             </div>
             <div class="stat-section">
                 <div id="view-odometer" class="odometer small-odometer"></div>
-                <div class="label"> 👀 Total Views (EST)</div>
+                <div class="label">👀 Total Views (EST)</div>
             </div>
             <div class="stat-section">
                 <div id="milestone-odometer" class="odometer small-odometer"></div>
-                <div class="label"> 🎯 Subscribers Left</div>
+                <div class="label">🎯 Subscribers Left</div>
             </div>
         </div>
 
@@ -246,47 +250,58 @@ function updateOdometer(type, input) {
     targetState.lastString = currentString;
 }
 
-async function fetchData() {
+// Function 1: Fetches Subs and Milestone every 2 seconds
+async function fetchSubs() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
         
         const estSub = data.counters.estimation.subscriberCount;
         const apiSub = data.counters.api.subscriberCount;
-        const apiView = data.counters.api.viewCount;
-        const estView = data.counters.estimation.viewCount;
 
         const nextMilestone = Math.ceil((estSub + 1) / 1000000) * 1000000;
         const remaining = nextMilestone - estSub;
 
         updateOdometer('sub', estSub);
         updateOdometer('apiSub', apiSub);
+        updateOdometer('milestone', remaining);
+    } catch (err) { console.error("Sub API Error:", err); }
+}
+
+// Function 2: Fetches Views every 5 seconds
+async function fetchViews() {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        const apiView = data.counters.api.viewCount;
+        const estView = data.counters.estimation.viewCount;
+
         updateOdometer('apiView', apiView);
         updateOdometer('view', estView);
-        updateOdometer('milestone', remaining);
-        
-    } catch (err) { console.error("API Error:", err); }
+    } catch (err) { console.error("View API Error:", err); }
 }
 
 function updateClock() {
     const now = new Date();
-    // Use 'long' for unabbreviated month and weekday names
     const options = { 
         weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
         hour: '2-digit', minute: '2-digit', second: '2-digit', 
         hour12: false 
     };
-    // Format: Friday, 06 March 2026, 20:14:33
     const timeString = now.toLocaleString('en-GB', options).replace(/\//g, ' ');
     updateOdometer('clock', timeString);
 }
 
-fetchData();
+// Initial Data Load
+fetchSubs();
+fetchViews();
 updateClock();
 
-setInterval(fetchData, 2000); 
-setInterval(updateClock, 1000);
+// Separated Intervals
+setInterval(fetchSubs, 2000);   // Subs update every 2s
+setInterval(fetchViews, 5000);  // Views update every 5s
+setInterval(updateClock, 1000); // Clock updates every 1s
 </script>
 </body>
 </html>
-
