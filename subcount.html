@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Live - Milestone Tracker</title>
+<title>MrBeast Live - Average Tracker</title>
 <style>
     @font-face {
         font-family: 'YouTubeSans';
@@ -129,7 +129,7 @@
     }
 
     .label {
-        font-size: clamp(12px, 5vw, 24px);
+        font-size: clamp(10px, 4.5vw, 20px); /* Slightly smaller to fit longer text */
         color: #ffffff; 
         margin-top: 25px; 
         font-weight: 800; 
@@ -138,7 +138,6 @@
         text-align: center;
     }
 
-    /* All Gain Odometer IDs for green color */
     #hour-gain-odometer, 
     #day-gain-odometer, 
     #view-hour-gain-odometer, 
@@ -183,7 +182,7 @@
             </div>
             <div class="stat-section">
                 <div id="day-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">📅 Channel Sub Gain (24H)</div>
+                <div class="label">📅 Est. Daily Subs (Average)</div>
             </div>
             <div class="stat-section">
                 <div id="view-hour-gain-odometer" class="odometer small-odometer"></div>
@@ -254,7 +253,6 @@ function updateOdometer(type, input) {
     const targetState = state[type];
     if (!targetState || !targetState.element) return;
     
-    // Prefix logic for all gains
     const isGain = type.toLowerCase().includes('gain');
     let prefix = isGain ? "+" : "";
     
@@ -285,7 +283,6 @@ function updateOdometer(type, input) {
     targetState.lastString = currentString;
 }
 
-// FETCH SUBSCRIBERS AND GAINS (Every 2s)
 async function fetchSubData() {
     try {
         const response = await fetch(API_URL);
@@ -300,8 +297,12 @@ async function fetchSubData() {
         history = history.filter(entry => entry.t > now - 87000000); 
         localStorage.setItem('subHistory', JSON.stringify(history));
 
+        // Get snapshot from 1 hour ago
         const hEntry = history.find(e => e.t >= now - 3600000) || history[0];
-        const dEntry = history.find(e => e.t >= now - 86400000) || history[0];
+        const currentHourGain = estSub - hEntry.c;
+
+        // NEW LOGIC: Hourly Gain multiplied by 24 for the average day projection
+        const averageDayGain = currentHourGain * 24;
 
         const nextMilestone = Math.ceil((estSub + 1) / 1000000) * 1000000;
         const remaining = nextMilestone - estSub;
@@ -309,13 +310,12 @@ async function fetchSubData() {
         updateOdometer('sub', estSub);
         updateOdometer('apiSub', apiSub);
         updateOdometer('milestone', remaining);
-        updateOdometer('hourGain', estSub - hEntry.c);
-        updateOdometer('dayGain', estSub - dEntry.c);
+        updateOdometer('hourGain', currentHourGain);
+        updateOdometer('dayGain', averageDayGain); // This is now (1H Gain * 24)
         
     } catch (err) { console.error("Sub API Error"); }
 }
 
-// FETCH VIEWS AND VIEW GAINS (Every 5s)
 async function fetchViewData() {
     try {
         const response = await fetch(API_URL);
@@ -324,12 +324,12 @@ async function fetchViewData() {
         const estView = data.counters.estimation.viewCount;
         const now = Date.now();
 
-        // Rolling View History
         let vHistory = JSON.parse(localStorage.getItem('viewHistory')) || [];
         vHistory.push({ t: now, c: estView });
         vHistory = vHistory.filter(entry => entry.t > now - 87000000);
         localStorage.setItem('viewHistory', JSON.stringify(vHistory));
 
+        // Keep 24H actual historical window for views as requested
         const vhEntry = vHistory.find(e => e.t >= now - 3600000) || vHistory[0];
         const vdEntry = vHistory.find(e => e.t >= now - 86400000) || vHistory[0];
 
@@ -345,18 +345,14 @@ function updateClock() {
     const now = new Date();
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    
     const timeString = `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()} at ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-    
     updateOdometer('clock', timeString);
 }
 
-// Initial Calls
 fetchSubData();
 fetchViewData();
 updateClock();
 
-// Set Separate Intervals
 setInterval(fetchSubData, 2000); 
 setInterval(fetchViewData, 5000); 
 setInterval(updateClock, 1000);
