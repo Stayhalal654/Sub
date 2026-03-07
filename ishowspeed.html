@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IShowSpeed Live</title>
+    <style>
+        @font-face { 
+            font-family: 'YouTubeSans'; 
+            src: url('InterDisplay-ExtraBold.ttf') format('truetype'); 
+            font-weight: 400 900; 
+        }
+        
+        body { 
+            background-color: #000; 
+            color: #fff; 
+            font-family: 'YouTubeSans', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+        
+        .channel-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 15px; 
+        }
+
+        .display-name { 
+            font-size: clamp(24px, 5vw, 40px); 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin-bottom: 10px;
+        }
+        
+        .stats-row { 
+            display: flex; 
+            align-items: center; 
+            gap: clamp(15px, 4vw, 30px); 
+        }
+
+        .pfp { 
+            width: clamp(150px, 12vw, 150px); 
+            height: clamp(150px, 12vw, 150px); 
+            border-radius: 50%; 
+            border: 3px solid #fff; 
+        }
+
+        .odometer { 
+            display: flex; 
+            align-items: center; /* Keeps digits and commas centered */
+            font-weight: 900; 
+            font-size: clamp(40px, 10vw, 100px); 
+            letter-spacing: -1px; 
+            line-height: 1; 
+            font-variant-numeric: tabular-nums; 
+        }
+
+        .digit-container { 
+            overflow: hidden; 
+            height: 1.1em; 
+            width: 0.72em; 
+            position: relative; 
+        }
+
+        .digit-roll { 
+            position: absolute; 
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+
+        .digit-roll span { 
+            display: block; 
+            line-height: 1.1em; 
+            text-align: center; 
+        }
+
+        /* The alignment fix for commas */
+        .static-char { 
+            display: flex;
+            align-items: center;
+            height: 1.1em;
+            padding: 0 0.05em; 
+        }
+        
+        .label { 
+            font-size: clamp(20px, 4vw, 40px); 
+            margin-top: 20px; 
+            font-weight: 950;
+            letter-spacing: 2px; 
+            text-transform: uppercase; 
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="channel-container">
+        <div class="display-name">IShowSpeed</div>
+        <div class="stats-row">
+            <img class="pfp" src="https://yt3.googleusercontent.com/ieK0j0sDqI_AHDwYxZ2Wly07-R7PG4S3YMtxOWCEe1QH-I0FgimJ92tlydQa6M78YD0VaywCaw=s160-c-k-c0x00ffffff-no-rj" alt="PFP">
+            <div id="sub-odometer" class="odometer"></div>
+        </div>
+        <div class="label">📊 Subscribers (Estimated)</div>
+    </div>
+
+    <script>
+        // Updated API for IShowSpeed
+        const API_URL = 'https://api.socialcounts.org/youtube-live-subscriber-count/UCWsDFcIhY2DBi3GB5uykGXA';
+        const state = { sub: { last: "", el: document.getElementById('sub-odometer') } };
+
+        function updateOdo(type, input) {
+            const s = state[type];
+            const str = typeof input === 'number' ? Math.floor(input).toLocaleString('en-US') : input;
+            
+            if (str.length !== s.last.length) {
+                s.el.innerHTML = '';
+                [...str].forEach(c => {
+                    if (isNaN(c)) {
+                        const span = document.createElement('span'); 
+                        span.className = 'static-char'; 
+                        span.textContent = c; 
+                        s.el.appendChild(span);
+                    } else {
+                        const d = document.createElement('div'); 
+                        d.className = 'digit-container';
+                        const r = document.createElement('div'); 
+                        r.className = 'digit-roll';
+                        for(let i=0; i<=9; i++) { 
+                            const sp = document.createElement('span'); 
+                            sp.textContent = i; 
+                            r.appendChild(sp); 
+                        }
+                        d.appendChild(r); 
+                        s.el.appendChild(d);
+                    }
+                });
+            }
+            
+            const rolls = s.el.querySelectorAll('.digit-roll');
+            const digits = [...str].filter(c => !isNaN(c));
+            digits.forEach((n, i) => {
+                if(rolls[i]) rolls[i].style.transform = `translateY(-${n * 1.1}em)`;
+            });
+            s.last = str;
+        }
+
+        async function fetchSubs() {
+            try { 
+                const r = await fetch(API_URL); 
+                const d = await r.json(); 
+                updateOdo('sub', d.counters.estimation.subscriberCount); 
+            } catch(e) { console.error("API Error"); }
+        }
+
+        // Set to update every 2 seconds as requested
+        setInterval(fetchSubs, 4100); 
+        fetchSubs();
+    </script>
+</body>
+</html>
