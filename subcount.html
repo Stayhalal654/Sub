@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Live - Spaced Tracker</title>
+<title>MrBeast Live - Milestone Tracker</title>
 <style>
     @font-face {
         font-family: 'YouTubeSans';
@@ -20,8 +20,9 @@
         align-items: center;
         min-height: 100vh;
         margin: 0;
+        overflow-y: auto;
         overflow-x: hidden;
-        padding: 60px 0; /* More top/bottom padding */
+        padding: 40px 0;
     }
 
     .content-wrapper {
@@ -42,63 +43,71 @@
         flex-direction: column; 
         align-items: center;
         gap: 15px; 
-        font-size: 16px; 
-        font-weight: 900; 
-        margin-bottom: 70px; /* More space below header */
+        font-size: clamp(14px, 2vw, 22px); 
+        font-weight: 500; 
+        margin-bottom: clamp(50px, 8vh, 90px);
         text-transform: uppercase;
-        letter-spacing: 1px;
     }
 
     .header img {
-        width: 130px; 
-        height: 130px;
+        width: clamp(150px, 11vw, 150px); 
+        height: clamp(150px, 11vw, 150px);
         border-radius: 50%;
-        border: 3px solid #00c3ff;
+        border: 2px solid #ffffff;
     }
 
     .main-stat-section {
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-bottom: 80px; /* More space below main sub count */
+        justify-content: center;
+        margin-bottom: clamp(40px, 8vh, 80px);
     }
 
     .stats-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        row-gap: 70px; /* Vertical gap between rows */
-        column-gap: 40px; /* Horizontal gap between columns */
+        row-gap: clamp(65px, 9vh, 85px);
+        column-gap: clamp(12px, 6vw, 50px);
         width: 100%;
         max-width: 900px;
-        padding: 0 20px;
+        padding: 0 10px;
+        box-sizing: border-box;
     }
 
     .stat-section {
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
+        width: 100%;
     }
 
     .odometer {
         display: flex;
         align-items: center;
         font-weight: 900; 
+        letter-spacing: -1px;
+        line-height: 1;
         font-variant-numeric: tabular-nums;
     }
 
-    #sub-odometer { font-size: clamp(50px, 12vw, 100px); }
-    .small-odometer { font-size: clamp(24px, 6vw, 44px); }
-    #date-time { font-size: 20px; margin-top: 80px; }
+    #sub-odometer { font-size: clamp(50px, 11vw, 115px); }
+    .small-odometer { font-size: clamp(23px, 5.5vw, 45px); }
+    
+    #date-time { font-size: clamp(16px, 3.5vw, 26px); }
 
     .digit-container {
         overflow: hidden;
         height: 1.1em;
-        width: 0.72em; /* Increased width for breathing room */
+        width: 0.72em; 
         position: relative;
     }
 
     .digit-roll {
         position: absolute;
+        top: 0;
+        left: 0;
         transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -106,87 +115,101 @@
         display: block;
         line-height: 1.1em;
         text-align: center;
+        font-weight: 900;
     }
 
     .static-char {
         display: flex;
         align-items: center;
-        justify-content: center;
         height: 1.1em;
+        padding: 0 0.1em;
+        text-align: center;
         font-weight: 900;
-        padding: 0 2px; /* Adds space around commas/plus signs */
+        white-space: pre;
     }
 
     .label {
-        font-size: 12px;
-        color: #aaaaaa; /* Slightly dimmed for better hierarchy */
-        margin-top: 18px; /* More space between number and label */
+        font-size: clamp(12px, 5vw, 24px);
+        color: #ffffff; 
+        margin-top: 25px; 
         font-weight: 800; 
         text-transform: uppercase;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        letter-spacing: 1.5px; /* Spaced out text */
+        letter-spacing: 1.5px;
+        text-align: center;
     }
 
-    /* Color for Gains */
-    .gain-stat { color: #00ff88 !important; }
+    /* All Gain Odometer IDs for green color */
+    #hour-gain-odometer, 
+    #day-gain-odometer, 
+    #view-hour-gain-odometer, 
+    #view-day-gain-odometer { 
+        color: #00ff88; 
+    }
+
+    .time-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: clamp(60px, 10vh, 120px);
+        padding-bottom: 40px;
+    }
 </style>
 </head>
 <body>
 
     <div class="content-wrapper">
         <div class="header">
-            <img src="https://yt3.googleusercontent.com/nxYrc_1_2f77DoBadyxMTmv7ZpRZapHR5jbuYe7PlPd5cIRJxtNNEYyOC0ZsxaDyJJzXrnJiuDE=s160-c-k-c0x00ffffff-no-rj" alt="MrBeast">
-            MRBEAST
+            <img src="https://yt3.ggpht.com/ytc/AIdro_licRUYkb1mqyEXaQPq67wtqgk7qinfWOEvc6gjnsSofu4=s240-c-k-c0x00ffffff-no-rj" alt="MrBeast">
+            MrBeast
         </div>
 
         <div class="main-stat-section">
             <div id="sub-odometer" class="odometer"></div>
-            <div class="label">📊 SUBSCRIBERS (EST)</div>
+            <div class="label">📊 Subscribers (EST)</div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-section">
                 <div id="api-sub-odometer" class="odometer small-odometer"></div>
-                <div class="label">📈 SUBSCRIBERS (API)</div>
+                <div class="label">📈 Subscribers (API)</div>
             </div>
             <div class="stat-section">
                 <div id="milestone-odometer" class="odometer small-odometer"></div>
-                <div class="label">🎯 SUBSCRIBERS LEFT</div>
+                <div class="label">🎯 Subscribers Left</div>
             </div>
             <div class="stat-section">
-                <div id="hour-gain-odometer" class="odometer small-odometer gain-stat"></div>
-                <div class="label">🚀 LAST 60 MINS</div>
+                <div id="hour-gain-odometer" class="odometer small-odometer"></div>
+                <div class="label">🚀 Sub Gain (1H)</div>
             </div>
             <div class="stat-section">
-                <div id="day-gain-odometer" class="odometer small-odometer gain-stat"></div>
-                <div class="label">📅 LAST 24 HOURS</div>
+                <div id="day-gain-odometer" class="odometer small-odometer"></div>
+                <div class="label">📅 Sub Gain (24H)</div>
             </div>
             <div class="stat-section">
-                <div id="view-hour-gain-odometer" class="odometer small-odometer gain-stat"></div>
-                <div class="label">🔥 VIEWS (SLIDING 1H)</div>
+                <div id="view-hour-gain-odometer" class="odometer small-odometer"></div>
+                <div class="label">🔥 View Gain (1H)</div>
             </div>
             <div class="stat-section">
-                <div id="view-day-gain-odometer" class="odometer small-odometer gain-stat"></div>
-                <div class="label">🌟 VIEWS (SLIDING 24H)</div>
+                <div id="view-day-gain-odometer" class="odometer small-odometer"></div>
+                <div class="label">🌟 View Gain (24H)</div>
             </div>
             <div class="stat-section">
                 <div id="api-view-odometer" class="odometer small-odometer"></div>
-                <div class="label">🔍 TOTAL VIEWS (API)</div>
+                <div class="label">🔍 Total Views (API)</div>
             </div>
             <div class="stat-section">
                 <div id="view-odometer" class="odometer small-odometer"></div>
-                <div class="label">👀 TOTAL VIEWS (EST)</div>
+                <div class="label">👀 Total Views (EST)</div>
             </div>
         </div>
 
-        <div id="date-time" class="odometer"></div>
-        <div class="label">🕐 LOCAL DATE & TIME</div>
+        <div class="time-section">
+            <div id="date-time" class="odometer"></div>
+            <div class="label">🕐 Local Date & Time (24H)</div>
+        </div>
     </div>
 
 <script>
-// Logic remains identical to your previous version to ensure sliding window works
 const API_URL = 'https://api.socialcounts.org/youtube-live-subscriber-count/UCX6OQ3DkcsbYNE6H8uQQuVA';
 
 const state = {
@@ -219,7 +242,11 @@ function createDigit() {
 function createStaticChar(char) {
     const span = document.createElement('span');
     span.className = 'static-char';
-    span.textContent = char;
+    if (char === ' ') {
+        span.innerHTML = ' '; 
+    } else {
+        span.textContent = char;
+    }
     return span;
 }
 
@@ -227,8 +254,11 @@ function updateOdometer(type, input) {
     const targetState = state[type];
     if (!targetState || !targetState.element) return;
     
+    // Prefix logic for all gains
     const isGain = type.toLowerCase().includes('gain');
-    let currentString = typeof input === 'number' ? (isGain ? "+" : "") + Math.floor(input).toLocaleString('en-US') : input;
+    let prefix = isGain ? "+" : "";
+    
+    const currentString = typeof input === 'number' ? prefix + Math.floor(input).toLocaleString('en-US') : input;
     
     if (currentString.length !== targetState.lastString.length) {
         targetState.element.innerHTML = '';
@@ -247,76 +277,89 @@ function updateOdometer(type, input) {
     digitsOnly.forEach((num, i) => {
         const roll = digitRolls[i];
         if (roll) {
-            roll.style.transform = `translateY(-${parseInt(num, 10) * 1.1}em)`;
+            const targetNum = parseInt(num, 10);
+            roll.style.transform = `translateY(-${targetNum * 1.1}em)`;
         }
     });
 
     targetState.lastString = currentString;
 }
 
-function saveSnapshot(key, value) {
-    let history = JSON.parse(localStorage.getItem(key)) || [];
-    const now = Date.now();
-    if (history.length === 0 || now - history[history.length - 1].t >= 60000) {
-        history.push({ t: now, v: value });
-        history = history.filter(entry => entry.t > now - 90000000);
-        localStorage.setItem(key, JSON.stringify(history));
-    }
-}
-
-function getSlidingGain(historyKey, currentVal, msAgo) {
-    let history = JSON.parse(localStorage.getItem(historyKey)) || [];
-    if (history.length === 0) return 0;
-    
-    const targetTime = Date.now() - msAgo;
-    const oldEntry = history.reduce((prev, curr) => {
-        return (Math.abs(curr.t - targetTime) < Math.abs(prev.t - targetTime) ? curr : prev);
-    });
-
-    const gain = currentVal - oldEntry.v;
-    return isNaN(gain) ? 0 : gain;
-}
-
-async function fetchSubs() {
+// FETCH SUBSCRIBERS AND GAINS (Every 2s)
+async function fetchSubData() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
+        
         const estSub = data.counters.estimation.subscriberCount;
-        saveSnapshot('subHistory', estSub);
+        const apiSub = data.counters.api.subscriberCount;
+        const now = Date.now();
+
+        let history = JSON.parse(localStorage.getItem('subHistory')) || [];
+        history.push({ t: now, c: estSub });
+        history = history.filter(entry => entry.t > now - 87000000); 
+        localStorage.setItem('subHistory', JSON.stringify(history));
+
+        const hEntry = history.find(e => e.t >= now - 3600000) || history[0];
+        const dEntry = history.find(e => e.t >= now - 86400000) || history[0];
+
+        const nextMilestone = Math.ceil((estSub + 1) / 1000000) * 1000000;
+        const remaining = nextMilestone - estSub;
+
         updateOdometer('sub', estSub);
-        updateOdometer('apiSub', data.counters.api.subscriberCount);
-        updateOdometer('milestone', (Math.ceil((estSub + 1) / 1000000) * 1000000) - estSub);
-        updateOdometer('hourGain', getSlidingGain('subHistory', estSub, 3600000));
-        updateOdometer('dayGain', getSlidingGain('subHistory', estSub, 86400000));
-    } catch (err) { console.error("Sub Error"); }
+        updateOdometer('apiSub', apiSub);
+        updateOdometer('milestone', remaining);
+        updateOdometer('hourGain', estSub - hEntry.c);
+        updateOdometer('dayGain', estSub - dEntry.c);
+        
+    } catch (err) { console.error("Sub API Error"); }
 }
 
-async function fetchViews() {
+// FETCH VIEWS AND VIEW GAINS (Every 5s)
+async function fetchViewData() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
+        
         const estView = data.counters.estimation.viewCount;
-        saveSnapshot('viewHistory', estView);
+        const now = Date.now();
+
+        // Rolling View History
+        let vHistory = JSON.parse(localStorage.getItem('viewHistory')) || [];
+        vHistory.push({ t: now, c: estView });
+        vHistory = vHistory.filter(entry => entry.t > now - 87000000);
+        localStorage.setItem('viewHistory', JSON.stringify(vHistory));
+
+        const vhEntry = vHistory.find(e => e.t >= now - 3600000) || vHistory[0];
+        const vdEntry = vHistory.find(e => e.t >= now - 86400000) || vHistory[0];
+
         updateOdometer('apiView', data.counters.api.viewCount);
         updateOdometer('view', estView);
-        updateOdometer('viewHourGain', getSlidingGain('viewHistory', estView, 3600000));
-        updateOdometer('viewDayGain', getSlidingGain('viewHistory', estView, 86400000));
-    } catch (err) { console.error("View Error"); }
+        updateOdometer('viewHourGain', estView - vhEntry.c);
+        updateOdometer('viewDayGain', estView - vdEntry.c);
+        
+    } catch (err) { console.error("View API Error"); }
 }
 
 function updateClock() {
     const now = new Date();
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const timeString = `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()} at ${now.toLocaleTimeString('en-GB')}`;
+    
+    const timeString = `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()} at ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
     updateOdometer('clock', timeString);
 }
 
-fetchSubs(); fetchViews(); updateClock();
-setInterval(fetchSubs, 2000); 
-setInterval(fetchViews, 5000); 
+// Initial Calls
+fetchSubData();
+fetchViewData();
+updateClock();
+
+// Set Separate Intervals
+setInterval(fetchSubData, 2000); 
+setInterval(fetchViewData, 5000); 
 setInterval(updateClock, 1000);
 </script>
 </body>
 </html>
-
