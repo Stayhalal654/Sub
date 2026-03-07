@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Live - Average Tracker</title>
+<title>MrBeast Live - Real-Time Projections</title>
 <style>
     @font-face {
         font-family: 'YouTubeSans';
@@ -129,12 +129,12 @@
     }
 
     .label {
-        font-size: clamp(10px, 4.5vw, 20px); /* Slightly smaller to fit longer text */
+        font-size: clamp(10px, 4vw, 18px); 
         color: #ffffff; 
         margin-top: 25px; 
         font-weight: 800; 
         text-transform: uppercase;
-        letter-spacing: 1.5px;
+        letter-spacing: 1.2px;
         text-align: center;
     }
 
@@ -178,7 +178,7 @@
             </div>
             <div class="stat-section">
                 <div id="hour-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">🚀 Channel Sub Gain (1H)</div>
+                <div class="label">🚀 Sub Gain (1H)</div>
             </div>
             <div class="stat-section">
                 <div id="day-gain-odometer" class="odometer small-odometer"></div>
@@ -186,19 +186,19 @@
             </div>
             <div class="stat-section">
                 <div id="view-hour-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">🔥 Channel View Gain (1H)</div>
+                <div class="label">🔥 View Gain (1H)</div>
             </div>
             <div class="stat-section">
                 <div id="view-day-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">🌟 Channel View Gain (24H)</div>
+                <div class="label">🌟 Est. Daily Views (Average)</div>
             </div>
             <div class="stat-section">
                 <div id="api-view-odometer" class="odometer small-odometer"></div>
-                <div class="label">🔍 Total Channel Views (API)</div>
+                <div class="label">🔍 Total Views (API)</div>
             </div>
             <div class="stat-section">
                 <div id="view-odometer" class="odometer small-odometer"></div>
-                <div class="label">👀 Total Channel Views (EST)</div>
+                <div class="label">👀 Total Views (EST)</div>
             </div>
         </div>
 
@@ -287,58 +287,49 @@ async function fetchSubData() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
-        
         const estSub = data.counters.estimation.subscriberCount;
-        const apiSub = data.counters.api.subscriberCount;
         const now = Date.now();
 
         let history = JSON.parse(localStorage.getItem('subHistory')) || [];
         history.push({ t: now, c: estSub });
-        history = history.filter(entry => entry.t > now - 87000000); 
+        history = history.filter(entry => entry.t > now - 4000000); // 1-hour window
         localStorage.setItem('subHistory', JSON.stringify(history));
 
-        // Get snapshot from 1 hour ago
         const hEntry = history.find(e => e.t >= now - 3600000) || history[0];
         const currentHourGain = estSub - hEntry.c;
-
-        // NEW LOGIC: Hourly Gain multiplied by 24 for the average day projection
         const averageDayGain = currentHourGain * 24;
 
-        const nextMilestone = Math.ceil((estSub + 1) / 1000000) * 1000000;
-        const remaining = nextMilestone - estSub;
-
         updateOdometer('sub', estSub);
-        updateOdometer('apiSub', apiSub);
-        updateOdometer('milestone', remaining);
+        updateOdometer('apiSub', data.counters.api.subscriberCount);
+        updateOdometer('milestone', (Math.ceil((estSub + 1) / 1000000) * 1000000) - estSub);
         updateOdometer('hourGain', currentHourGain);
-        updateOdometer('dayGain', averageDayGain); // This is now (1H Gain * 24)
+        updateOdometer('dayGain', averageDayGain);
         
-    } catch (err) { console.error("Sub API Error"); }
+    } catch (err) { console.error("Sub Error"); }
 }
 
 async function fetchViewData() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
-        
         const estView = data.counters.estimation.viewCount;
         const now = Date.now();
 
         let vHistory = JSON.parse(localStorage.getItem('viewHistory')) || [];
         vHistory.push({ t: now, c: estView });
-        vHistory = vHistory.filter(entry => entry.t > now - 87000000);
+        vHistory = vHistory.filter(entry => entry.t > now - 4000000);
         localStorage.setItem('viewHistory', JSON.stringify(vHistory));
 
-        // Keep 24H actual historical window for views as requested
         const vhEntry = vHistory.find(e => e.t >= now - 3600000) || vHistory[0];
-        const vdEntry = vHistory.find(e => e.t >= now - 86400000) || vHistory[0];
+        const currentViewHourGain = estView - vhEntry.c;
+        const averageViewDayGain = currentViewHourGain * 24; // Applied projection logic here too
 
         updateOdometer('apiView', data.counters.api.viewCount);
         updateOdometer('view', estView);
-        updateOdometer('viewHourGain', estView - vhEntry.c);
-        updateOdometer('viewDayGain', estView - vdEntry.c);
+        updateOdometer('viewHourGain', currentViewHourGain);
+        updateOdometer('viewDayGain', averageViewDayGain);
         
-    } catch (err) { console.error("View API Error"); }
+    } catch (err) { console.error("View Error"); }
 }
 
 function updateClock() {
@@ -349,10 +340,7 @@ function updateClock() {
     updateOdometer('clock', timeString);
 }
 
-fetchSubData();
-fetchViewData();
-updateClock();
-
+fetchSubData(); fetchViewData(); updateClock();
 setInterval(fetchSubData, 2000); 
 setInterval(fetchViewData, 5000); 
 setInterval(updateClock, 1000);
