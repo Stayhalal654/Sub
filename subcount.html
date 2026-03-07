@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Live - Real-Time Projections</title>
+<title>MrBeast Live - Smooth Odometer</title>
 <style>
     @font-face {
         font-family: 'YouTubeSans';
@@ -86,6 +86,7 @@
     .odometer {
         display: flex;
         align-items: center;
+        justify-content: center;
         font-weight: 900; 
         letter-spacing: -1px;
         line-height: 1;
@@ -94,21 +95,25 @@
 
     #sub-odometer { font-size: clamp(50px, 11vw, 115px); }
     .small-odometer { font-size: clamp(23px, 5.5vw, 45px); }
-    
     #date-time { font-size: clamp(16px, 3.5vw, 26px); }
 
+    /* SMOOTHING TWEAKS */
     .digit-container {
         overflow: hidden;
         height: 1.11em;
-        width: 0.70em; 
+        width: 0.68em; 
         position: relative;
+        display: inline-block;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .digit-roll {
         position: absolute;
         top: 0;
         left: 0;
-        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100%;
+        transition: transform 0.8s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+        will-change: transform;
     }
 
     .digit-roll span {
@@ -119,13 +124,13 @@
     }
 
     .static-char {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        height: 1.1em;
-        padding: 0 0.1em;
-        text-align: center;
+        justify-content: center;
+        height: 1.11em;
+        width: 0.3em;
         font-weight: 900;
-        white-space: pre;
+        transition: width 0.3s, opacity 0.3s;
     }
 
     .label {
@@ -158,7 +163,7 @@
 
     <div class="content-wrapper">
         <div class="header">
-            <img src="https://yt3.googleusercontent.com/nxYrc_1_2f77DoBadyxMTmv7ZpRZapHR5jbuYe7PlPd5cIRJxtNNEYyOC0ZsxaDyJJzXrnJiuDE=s160-c-k-c0x00ffffff-no-rj" alt="MrBeast">
+            <img src="https://yt3.ggpht.com/fxGkyWwc9_ubvHS9Sk6E8V2W_uY7Y_C9089p6S9U9Yj_j8y3y8f_YjJ5A7-Vb_R8fVj8V8V8=s176-c-k-c0x00ffffff-no-rj" alt="MrBeast">
             MrBeast
         </div>
 
@@ -182,7 +187,7 @@
             </div>
             <div class="stat-section">
                 <div id="day-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">📅 Est. Daily Subs (Average)</div>
+                <div class="label">📅 Est. Daily Subs</div>
             </div>
             <div class="stat-section">
                 <div id="view-hour-gain-odometer" class="odometer small-odometer"></div>
@@ -190,7 +195,7 @@
             </div>
             <div class="stat-section">
                 <div id="view-day-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">🌟 Est. Daily Views (Average)</div>
+                <div class="label">🌟 Est. Daily Views</div>
             </div>
             <div class="stat-section">
                 <div id="api-view-odometer" class="odometer small-odometer"></div>
@@ -241,42 +246,54 @@ function createDigit() {
 function createStaticChar(char) {
     const span = document.createElement('span');
     span.className = 'static-char';
-    if (char === ' ') {
-        span.innerHTML = ' '; 
-    } else {
-        span.textContent = char;
-    }
+    span.textContent = char;
     return span;
 }
 
+// THE NEW SMOOTH UPDATE ENGINE
 function updateOdometer(type, input) {
     const targetState = state[type];
     if (!targetState || !targetState.element) return;
     
     const isGain = type.toLowerCase().includes('gain');
-    let prefix = isGain ? "+" : "";
-    
+    const prefix = isGain ? "+" : "";
     const currentString = typeof input === 'number' ? prefix + Math.floor(input).toLocaleString('en-US') : input;
     
-    if (currentString.length !== targetState.lastString.length) {
-        targetState.element.innerHTML = '';
-        [...currentString].forEach(char => {
+    if (currentString === targetState.lastString) return;
+
+    // Diffing logic: Adjust element count without clearing
+    const currentChars = [...currentString];
+    const element = targetState.element;
+
+    // Rebuild only if significantly different, otherwise update in place
+    if (element.children.length !== currentChars.length) {
+        element.innerHTML = '';
+        currentChars.forEach(char => {
             if (isNaN(parseInt(char, 10))) {
-                targetState.element.appendChild(createStaticChar(char));
+                element.appendChild(createStaticChar(char));
             } else {
-                targetState.element.appendChild(createDigit());
+                element.appendChild(createDigit());
             }
         });
     }
 
-    const digitRolls = targetState.element.querySelectorAll('.digit-roll');
-    const digitsOnly = [...currentString].filter(char => !isNaN(parseInt(char, 10)));
-    
-    digitsOnly.forEach((num, i) => {
-        const roll = digitRolls[i];
-        if (roll) {
-            const targetNum = parseInt(num, 10);
-            roll.style.transform = `translateY(-${targetNum * 1.1}em)`;
+    const digitRolls = element.querySelectorAll('.digit-roll');
+    let digitIdx = 0;
+
+    currentChars.forEach((char, i) => {
+        const isNum = !isNaN(parseInt(char, 10));
+        if (isNum) {
+            const roll = digitRolls[digitIdx];
+            if (roll) {
+                const targetNum = parseInt(char, 10);
+                roll.style.transform = `translateY(-${targetNum * 1.1}em)`;
+            }
+            digitIdx++;
+        } else {
+            // Update static chars (like commas) if they changed
+            if (element.children[i] && element.children[i].textContent !== char) {
+                element.children[i].textContent = char;
+            }
         }
     });
 
@@ -292,7 +309,7 @@ async function fetchSubData() {
 
         let history = JSON.parse(localStorage.getItem('subHistory')) || [];
         history.push({ t: now, c: estSub });
-        history = history.filter(entry => entry.t > now - 4000000); // 1-hour window
+        history = history.filter(entry => entry.t > now - 3700000); 
         localStorage.setItem('subHistory', JSON.stringify(history));
 
         const hEntry = history.find(e => e.t >= now - 3600000) || history[0];
@@ -317,12 +334,12 @@ async function fetchViewData() {
 
         let vHistory = JSON.parse(localStorage.getItem('viewHistory')) || [];
         vHistory.push({ t: now, c: estView });
-        vHistory = vHistory.filter(entry => entry.t > now - 4000000);
+        vHistory = vHistory.filter(entry => entry.t > now - 3700000);
         localStorage.setItem('viewHistory', JSON.stringify(vHistory));
 
         const vhEntry = vHistory.find(e => e.t >= now - 3600000) || vHistory[0];
         const currentViewHourGain = estView - vhEntry.c;
-        const averageViewDayGain = currentViewHourGain * 24; // Applied projection logic here too
+        const averageViewDayGain = currentViewHourGain * 24;
 
         updateOdometer('apiView', data.counters.api.viewCount);
         updateOdometer('view', estView);
