@@ -125,7 +125,7 @@
         padding: 0 0.1em;
         text-align: center;
         font-weight: 900;
-        white-space: pre; /* Essential for keeping spaces */
+        white-space: pre;
     }
 
     .label {
@@ -138,7 +138,6 @@
         text-align: center;
     }
 
-    /* Green color for gain numbers */
     #hour-gain-odometer, #day-gain-odometer { color: #00ff88; }
 
     .time-section {
@@ -228,7 +227,7 @@ function createStaticChar(char) {
     const span = document.createElement('span');
     span.className = 'static-char';
     if (char === ' ') {
-        span.innerHTML = '&nbsp;'; // Forces a hard space that won't collapse
+        span.innerHTML = '&nbsp;'; 
     } else {
         span.textContent = char;
     }
@@ -239,7 +238,6 @@ function updateOdometer(type, input) {
     const targetState = state[type];
     if (!targetState || !targetState.element) return;
     
-    // Add "+" prefix for gain types
     let prefix = (type === 'hourGain' || type === 'dayGain') ? "+" : "";
     const currentString = typeof input === 'number' ? prefix + Math.floor(input).toLocaleString('en-US') : input;
     
@@ -268,42 +266,46 @@ function updateOdometer(type, input) {
     targetState.lastString = currentString;
 }
 
-async function fetchData() {
+// FETCH SUBSCRIBERS AND CALCULATE GAINS (Every 2s)
+async function fetchSubData() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
         
         const estSub = data.counters.estimation.subscriberCount;
         const apiSub = data.counters.api.subscriberCount;
-        const apiView = data.counters.api.viewCount;
-        const estView = data.counters.estimation.viewCount;
         const now = Date.now();
 
-        // --- ROLLING HISTORY LOGIC ---
         let history = JSON.parse(localStorage.getItem('subHistory')) || [];
         history.push({ t: now, c: estSub });
-        
-        // Remove data older than 24 hours to keep storage clean
         history = history.filter(entry => entry.t > now - 87000000); 
         localStorage.setItem('subHistory', JSON.stringify(history));
 
-        // Find count from ~1 hour and ~24 hours ago
         const hEntry = history.find(e => e.t >= now - 3600000) || history[0];
         const dEntry = history.find(e => e.t >= now - 86400000) || history[0];
 
-        // Logic for milestone
         const nextMilestone = Math.ceil((estSub + 1) / 1000000) * 1000000;
         const remaining = nextMilestone - estSub;
 
         updateOdometer('sub', estSub);
         updateOdometer('apiSub', apiSub);
-        updateOdometer('apiView', apiView);
-        updateOdometer('view', estView);
         updateOdometer('milestone', remaining);
         updateOdometer('hourGain', estSub - hEntry.c);
         updateOdometer('dayGain', estSub - dEntry.c);
         
-    } catch (err) { console.error("API Error:", err); }
+    } catch (err) { console.error("Sub API Error"); }
+}
+
+// FETCH VIEWS ONLY (Every 5s)
+async function fetchViewData() {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        updateOdometer('apiView', data.counters.api.viewCount);
+        updateOdometer('view', data.counters.estimation.viewCount);
+        
+    } catch (err) { console.error("View API Error"); }
 }
 
 function updateClock() {
@@ -316,11 +318,15 @@ function updateClock() {
     updateOdometer('clock', timeString);
 }
 
-fetchData();
+// Initial Calls
+fetchSubData();
+fetchViewData();
 updateClock();
 
-setInterval(fetchData, 2000); 
-setInterval(updateClock, 1000);
+// Set Separate Intervals
+setInterval(fetchSubData, 2000);  // Subs & Gains: 2 seconds
+setInterval(fetchViewData, 5000); // Views: 5 seconds
+setInterval(updateClock, 1000);   // Clock: 1 second
 </script>
 </body>
 </html>
