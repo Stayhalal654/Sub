@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Live - Fixed Sliding Tracker</title>
+<title>MrBeast Live - Spaced Tracker</title>
 <style>
     @font-face {
         font-family: 'YouTubeSans';
@@ -21,7 +21,7 @@
         min-height: 100vh;
         margin: 0;
         overflow-x: hidden;
-        padding: 40px 0;
+        padding: 60px 0; /* More top/bottom padding */
     }
 
     .content-wrapper {
@@ -41,34 +41,36 @@
         display: flex;
         flex-direction: column; 
         align-items: center;
-        gap: 10px; 
-        font-size: 14px; 
+        gap: 15px; 
+        font-size: 16px; 
         font-weight: 900; 
-        margin-bottom: 50px;
+        margin-bottom: 70px; /* More space below header */
         text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
     .header img {
-        width: 80px; 
-        height: 80px;
+        width: 90px; 
+        height: 90px;
         border-radius: 50%;
-        border: 2px solid #00c3ff;
+        border: 3px solid #00c3ff;
     }
 
     .main-stat-section {
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-bottom: 60px;
+        margin-bottom: 80px; /* More space below main sub count */
     }
 
     .stats-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        row-gap: 50px;
-        column-gap: 20px;
+        row-gap: 70px; /* Vertical gap between rows */
+        column-gap: 40px; /* Horizontal gap between columns */
         width: 100%;
-        max-width: 800px;
+        max-width: 900px;
+        padding: 0 20px;
     }
 
     .stat-section {
@@ -84,14 +86,14 @@
         font-variant-numeric: tabular-nums;
     }
 
-    #sub-odometer { font-size: clamp(45px, 10vw, 90px); }
-    .small-odometer { font-size: clamp(22px, 5vw, 40px); }
-    #date-time { font-size: 18px; margin-top: 60px; }
+    #sub-odometer { font-size: clamp(50px, 12vw, 100px); }
+    .small-odometer { font-size: clamp(24px, 6vw, 44px); }
+    #date-time { font-size: 20px; margin-top: 80px; }
 
     .digit-container {
         overflow: hidden;
         height: 1.1em;
-        width: 0.65em; 
+        width: 0.72em; /* Increased width for breathing room */
         position: relative;
     }
 
@@ -109,22 +111,25 @@
     .static-char {
         display: flex;
         align-items: center;
+        justify-content: center;
         height: 1.1em;
         font-weight: 900;
+        padding: 0 2px; /* Adds space around commas/plus signs */
     }
 
     .label {
         font-size: 12px;
-        color: #ffffff; 
-        margin-top: 10px; 
-        font-weight: 700; 
+        color: #aaaaaa; /* Slightly dimmed for better hierarchy */
+        margin-top: 18px; /* More space between number and label */
+        font-weight: 800; 
         text-transform: uppercase;
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 8px;
+        letter-spacing: 1.5px; /* Spaced out text */
     }
 
-    /* Green for Gains */
+    /* Color for Gains */
     .gain-stat { color: #00ff88 !important; }
 </style>
 </head>
@@ -181,6 +186,7 @@
     </div>
 
 <script>
+// Logic remains identical to your previous version to ensure sliding window works
 const API_URL = 'https://api.socialcounts.org/youtube-live-subscriber-count/UCX6OQ3DkcsbYNE6H8uQQuVA';
 
 const state = {
@@ -260,7 +266,7 @@ function saveSnapshot(key, value) {
 
 function getSlidingGain(historyKey, currentVal, msAgo) {
     let history = JSON.parse(localStorage.getItem(historyKey)) || [];
-    if (history.length === 0) return 0; // Fixes NaN by returning 0 if no history
+    if (history.length === 0) return 0;
     
     const targetTime = Date.now() - msAgo;
     const oldEntry = history.reduce((prev, curr) => {
@@ -268,7 +274,7 @@ function getSlidingGain(historyKey, currentVal, msAgo) {
     });
 
     const gain = currentVal - oldEntry.v;
-    return isNaN(gain) ? 0 : gain; // Double safety check for NaN
+    return isNaN(gain) ? 0 : gain;
 }
 
 async function fetchSubs() {
@@ -276,9 +282,7 @@ async function fetchSubs() {
         const response = await fetch(API_URL);
         const data = await response.json();
         const estSub = data.counters.estimation.subscriberCount;
-
         saveSnapshot('subHistory', estSub);
-
         updateOdometer('sub', estSub);
         updateOdometer('apiSub', data.counters.api.subscriberCount);
         updateOdometer('milestone', (Math.ceil((estSub + 1) / 1000000) * 1000000) - estSub);
@@ -292,9 +296,7 @@ async function fetchViews() {
         const response = await fetch(API_URL);
         const data = await response.json();
         const estView = data.counters.estimation.viewCount;
-
         saveSnapshot('viewHistory', estView);
-
         updateOdometer('apiView', data.counters.api.viewCount);
         updateOdometer('view', estView);
         updateOdometer('viewHourGain', getSlidingGain('viewHistory', estView, 3600000));
@@ -317,5 +319,4 @@ setInterval(updateClock, 1000);
 </script>
 </body>
 </html>
-
 
