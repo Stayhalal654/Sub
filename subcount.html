@@ -91,6 +91,8 @@
         letter-spacing: -1px;
         line-height: 1;
         font-variant-numeric: tabular-nums;
+        /* THE FIX: Nudges the numbers slightly left to fix visual centering */
+        transform: translateX(-5px); 
     }
 
     #sub-odometer { font-size: clamp(50px, 11vw, 115px); }
@@ -111,7 +113,6 @@
         top: 0;
         left: 0;
         width: 100%;
-        /* Reverted back to the original snappy 0.8s animation style */
         transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
         will-change: transform;
     }
