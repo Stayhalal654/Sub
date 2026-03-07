@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Live - Classic Snap Odometer</title>
+<title>MrBeast Live - Left Aligned Odometer</title>
 <style>
     @font-face {
         font-family: 'YouTubeSans';
@@ -56,11 +56,16 @@
         border: 2px solid #ffffff;
     }
 
+    /* --- GRID & ALIGNMENT TWEAKS --- */
     .main-stat-section {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start; /* Changed from center */
         justify-content: center;
+        width: 100%;
+        max-width: 900px;
+        padding-left: 10%; /* Controls the left offset */
+        box-sizing: border-box;
         margin-bottom: clamp(40px, 8vh, 80px);
     }
 
@@ -68,17 +73,17 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         row-gap: clamp(65px, 9vh, 85px);
-        column-gap: clamp(12px, 6vw, 50px);
+        column-gap: 20px;
         width: 100%;
         max-width: 900px;
-        padding: 0 10px;
+        padding-left: 10%; /* Matches the main section */
         box-sizing: border-box;
     }
 
     .stat-section {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start; /* Changed from center to hug left */
         justify-content: center;
         width: 100%;
     }
@@ -86,13 +91,11 @@
     .odometer {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start; /* Aligns numbers to the left */
         font-weight: 900; 
         letter-spacing: -1px;
         line-height: 1;
         font-variant-numeric: tabular-nums;
-        /* THE FIX: Nudges the numbers slightly left to fix visual centering */
-        transform: translateX(-5px); 
     }
 
     #sub-odometer { font-size: clamp(50px, 11vw, 115px); }
@@ -137,13 +140,13 @@
     }
 
     .label {
-        font-size: clamp(20px, 4vw, 30px); 
+        font-size: clamp(14px, 3vw, 22px); 
         color: #ffffff; 
-        margin-top: 30px; 
+        margin-top: 15px; 
         font-weight: 900; 
         text-transform: uppercase;
         letter-spacing: 1.15px;
-        text-align: center;
+        text-align: left; /* Aligns label text left */
     }
 
     #hour-gain-odometer, 
@@ -156,7 +159,11 @@
     .time-section {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start; /* Hug left */
+        width: 100%;
+        max-width: 900px;
+        padding-left: 10%;
+        box-sizing: border-box;
         margin-top: clamp(60px, 10vh, 120px);
         padding-bottom: 40px;
     }
@@ -217,6 +224,7 @@
     </div>
 
 <script>
+// ... (Script remains exactly the same as your working copy)
 const API_URL = 'https://api.socialcounts.org/youtube-live-subscriber-count/UCX6OQ3DkcsbYNE6H8uQQuVA';
 
 const state = {
