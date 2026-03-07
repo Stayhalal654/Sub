@@ -138,7 +138,13 @@
         text-align: center;
     }
 
-    #hour-gain-odometer, #day-gain-odometer { color: #00ff88; }
+    /* All Gain Odometer IDs for green color */
+    #hour-gain-odometer, 
+    #day-gain-odometer, 
+    #view-hour-gain-odometer, 
+    #view-day-gain-odometer { 
+        color: #00ff88; 
+    }
 
     .time-section {
         display: flex;
@@ -173,11 +179,19 @@
             </div>
             <div class="stat-section">
                 <div id="hour-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">🚀 Last 60 Mins</div>
+                <div class="label">🚀 Sub Gain (1H)</div>
             </div>
             <div class="stat-section">
                 <div id="day-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">📅 Last 24 Hours</div>
+                <div class="label">📅 Sub Gain (24H)</div>
+            </div>
+            <div class="stat-section">
+                <div id="view-hour-gain-odometer" class="odometer small-odometer"></div>
+                <div class="label">🔥 View Gain (1H)</div>
+            </div>
+            <div class="stat-section">
+                <div id="view-day-gain-odometer" class="odometer small-odometer"></div>
+                <div class="label">🌟 View Gain (24H)</div>
             </div>
             <div class="stat-section">
                 <div id="api-view-odometer" class="odometer small-odometer"></div>
@@ -206,6 +220,8 @@ const state = {
     milestone: { lastString: "", element: document.getElementById('milestone-odometer') },
     hourGain: { lastString: "", element: document.getElementById('hour-gain-odometer') },
     dayGain: { lastString: "", element: document.getElementById('day-gain-odometer') },
+    viewHourGain: { lastString: "", element: document.getElementById('view-hour-gain-odometer') },
+    viewDayGain: { lastString: "", element: document.getElementById('view-day-gain-odometer') },
     clock: { lastString: "", element: document.getElementById('date-time') }
 };
 
@@ -227,7 +243,7 @@ function createStaticChar(char) {
     const span = document.createElement('span');
     span.className = 'static-char';
     if (char === ' ') {
-        span.innerHTML = '&nbsp;'; 
+        span.innerHTML = ' '; 
     } else {
         span.textContent = char;
     }
@@ -238,7 +254,10 @@ function updateOdometer(type, input) {
     const targetState = state[type];
     if (!targetState || !targetState.element) return;
     
-    let prefix = (type === 'hourGain' || type === 'dayGain') ? "+" : "";
+    // Prefix logic for all gains
+    const isGain = type.toLowerCase().includes('gain');
+    let prefix = isGain ? "+" : "";
+    
     const currentString = typeof input === 'number' ? prefix + Math.floor(input).toLocaleString('en-US') : input;
     
     if (currentString.length !== targetState.lastString.length) {
@@ -266,7 +285,7 @@ function updateOdometer(type, input) {
     targetState.lastString = currentString;
 }
 
-// FETCH SUBSCRIBERS AND CALCULATE GAINS (Every 2s)
+// FETCH SUBSCRIBERS AND GAINS (Every 2s)
 async function fetchSubData() {
     try {
         const response = await fetch(API_URL);
@@ -296,14 +315,28 @@ async function fetchSubData() {
     } catch (err) { console.error("Sub API Error"); }
 }
 
-// FETCH VIEWS ONLY (Every 5s)
+// FETCH VIEWS AND VIEW GAINS (Every 5s)
 async function fetchViewData() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
         
+        const estView = data.counters.estimation.viewCount;
+        const now = Date.now();
+
+        // Rolling View History
+        let vHistory = JSON.parse(localStorage.getItem('viewHistory')) || [];
+        vHistory.push({ t: now, c: estView });
+        vHistory = vHistory.filter(entry => entry.t > now - 87000000);
+        localStorage.setItem('viewHistory', JSON.stringify(vHistory));
+
+        const vhEntry = vHistory.find(e => e.t >= now - 3600000) || vHistory[0];
+        const vdEntry = vHistory.find(e => e.t >= now - 86400000) || vHistory[0];
+
         updateOdometer('apiView', data.counters.api.viewCount);
-        updateOdometer('view', data.counters.estimation.viewCount);
+        updateOdometer('view', estView);
+        updateOdometer('viewHourGain', estView - vhEntry.c);
+        updateOdometer('viewDayGain', estView - vdEntry.c);
         
     } catch (err) { console.error("View API Error"); }
 }
@@ -324,9 +357,10 @@ fetchViewData();
 updateClock();
 
 // Set Separate Intervals
-setInterval(fetchSubData, 2000);  // Subs & Gains: 2 seconds
-setInterval(fetchViewData, 5000); // Views: 5 seconds
-setInterval(updateClock, 1000);   // Clock: 1 second
+setInterval(fetchSubData, 2000); 
+setInterval(fetchViewData, 5000); 
+setInterval(updateClock, 1000);
 </script>
 </body>
 </html>
+
