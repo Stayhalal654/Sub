@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Live - Sliding Window Tracker</title>
+<title>MrBeast Live - Fixed Sliding Tracker</title>
 <style>
     @font-face {
         font-family: 'YouTubeSans';
@@ -20,7 +20,6 @@
         align-items: center;
         min-height: 100vh;
         margin: 0;
-        overflow-y: auto;
         overflow-x: hidden;
         padding: 40px 0;
     }
@@ -42,72 +41,62 @@
         display: flex;
         flex-direction: column; 
         align-items: center;
-        gap: 15px; 
-        font-size: clamp(14px, 2vw, 22px); 
-        font-weight: 500; 
-        margin-bottom: clamp(50px, 8vh, 90px);
+        gap: 10px; 
+        font-size: 14px; 
+        font-weight: 900; 
+        margin-bottom: 50px;
         text-transform: uppercase;
     }
 
     .header img {
-        width: clamp(150px, 11vw, 150px); 
-        height: clamp(150px, 11vw, 150px);
+        width: 80px; 
+        height: 80px;
         border-radius: 50%;
-        border: 2px solid #ffffff;
+        border: 2px solid #00c3ff;
     }
 
     .main-stat-section {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        margin-bottom: clamp(40px, 8vh, 80px);
+        margin-bottom: 60px;
     }
 
     .stats-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        row-gap: clamp(65px, 9vh, 85px);
-        column-gap: clamp(12px, 6vw, 50px);
+        row-gap: 50px;
+        column-gap: 20px;
         width: 100%;
-        max-width: 900px;
-        padding: 0 10px;
-        box-sizing: border-box;
+        max-width: 800px;
     }
 
     .stat-section {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        width: 100%;
     }
 
     .odometer {
         display: flex;
         align-items: center;
         font-weight: 900; 
-        letter-spacing: -1px;
-        line-height: 1;
         font-variant-numeric: tabular-nums;
     }
 
-    #sub-odometer { font-size: clamp(50px, 11vw, 115px); }
-    .small-odometer { font-size: clamp(23px, 5.5vw, 45px); }
-    
-    #date-time { font-size: clamp(16px, 3.5vw, 26px); }
+    #sub-odometer { font-size: clamp(45px, 10vw, 90px); }
+    .small-odometer { font-size: clamp(22px, 5vw, 40px); }
+    #date-time { font-size: 18px; margin-top: 60px; }
 
     .digit-container {
         overflow: hidden;
         height: 1.1em;
-        width: 0.72em; 
+        width: 0.65em; 
         position: relative;
     }
 
     .digit-roll {
         position: absolute;
-        top: 0;
-        left: 0;
         transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -115,97 +104,80 @@
         display: block;
         line-height: 1.1em;
         text-align: center;
-        font-weight: 900;
     }
 
     .static-char {
         display: flex;
         align-items: center;
         height: 1.1em;
-        padding: 0 0.1em;
-        text-align: center;
         font-weight: 900;
-        white-space: pre;
     }
 
     .label {
-        font-size: clamp(12px, 5vw, 24px);
+        font-size: 12px;
         color: #ffffff; 
-        margin-top: 25px; 
-        font-weight: 800; 
+        margin-top: 10px; 
+        font-weight: 700; 
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        text-align: center;
-    }
-
-    #hour-gain-odometer, 
-    #day-gain-odometer, 
-    #view-hour-gain-odometer, 
-    #view-day-gain-odometer { 
-        color: #00ff88; 
-    }
-
-    .time-section {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        margin-top: clamp(60px, 10vh, 120px);
-        padding-bottom: 40px;
+        gap: 5px;
     }
+
+    /* Green for Gains */
+    .gain-stat { color: #00ff88 !important; }
 </style>
 </head>
 <body>
 
     <div class="content-wrapper">
         <div class="header">
-            <img src="https://yt3.googleusercontent.com/nxYrc_1_2f77DoBadyxMTmv7ZpRZapHR5jbuYe7PlPd5cIRJxtNNEYyOC0ZsxaDyJJzXrnJiuDE=s160-c-k-c0x00ffffff-no-rj" alt="MrBeast">
-            MrBeast
+            <img src="https://yt3.ggpht.com/fxG_Z3Rf_z7-l9In_fC1DByUjh7H966mE89N6D_Gq639hB6G7_q_6_6_6_6_6=s176-c-k-c0x00ffffff-no-rj" alt="MrBeast">
+            MRBEAST
         </div>
 
         <div class="main-stat-section">
             <div id="sub-odometer" class="odometer"></div>
-            <div class="label">📊 Subscribers (EST)</div>
+            <div class="label">📊 SUBSCRIBERS (EST)</div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-section">
                 <div id="api-sub-odometer" class="odometer small-odometer"></div>
-                <div class="label">📈 Subscribers (API)</div>
+                <div class="label">📈 SUBSCRIBERS (API)</div>
             </div>
             <div class="stat-section">
                 <div id="milestone-odometer" class="odometer small-odometer"></div>
-                <div class="label">🎯 Subscribers Left</div>
+                <div class="label">🎯 SUBSCRIBERS LEFT</div>
             </div>
             <div class="stat-section">
-                <div id="hour-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">🚀 Last 60 Mins</div>
+                <div id="hour-gain-odometer" class="odometer small-odometer gain-stat"></div>
+                <div class="label">🚀 LAST 60 MINS</div>
             </div>
             <div class="stat-section">
-                <div id="day-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">📅 Last 24 Hours</div>
+                <div id="day-gain-odometer" class="odometer small-odometer gain-stat"></div>
+                <div class="label">📅 LAST 24 HOURS</div>
             </div>
             <div class="stat-section">
-                <div id="view-hour-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">🔥 Views (Sliding 1H)</div>
+                <div id="view-hour-gain-odometer" class="odometer small-odometer gain-stat"></div>
+                <div class="label">🔥 VIEWS (SLIDING 1H)</div>
             </div>
             <div class="stat-section">
-                <div id="view-day-gain-odometer" class="odometer small-odometer"></div>
-                <div class="label">🌟 Views (Sliding 24H)</div>
+                <div id="view-day-gain-odometer" class="odometer small-odometer gain-stat"></div>
+                <div class="label">🌟 VIEWS (SLIDING 24H)</div>
             </div>
             <div class="stat-section">
                 <div id="api-view-odometer" class="odometer small-odometer"></div>
-                <div class="label">🔍 Total Views (API)</div>
+                <div class="label">🔍 TOTAL VIEWS (API)</div>
             </div>
             <div class="stat-section">
                 <div id="view-odometer" class="odometer small-odometer"></div>
-                <div class="label">👀 Total Views (EST)</div>
+                <div class="label">👀 TOTAL VIEWS (EST)</div>
             </div>
         </div>
 
-        <div class="time-section">
-            <div id="date-time" class="odometer"></div>
-            <div class="label">🕐 Local Date & Time</div>
-        </div>
+        <div id="date-time" class="odometer"></div>
+        <div class="label">🕐 LOCAL DATE & TIME</div>
     </div>
 
 <script>
@@ -241,8 +213,7 @@ function createDigit() {
 function createStaticChar(char) {
     const span = document.createElement('span');
     span.className = 'static-char';
-    if (char === ' ') { span.innerHTML = ' '; } 
-    else { span.textContent = char; }
+    span.textContent = char;
     return span;
 }
 
@@ -251,9 +222,7 @@ function updateOdometer(type, input) {
     if (!targetState || !targetState.element) return;
     
     const isGain = type.toLowerCase().includes('gain');
-    let prefix = isGain ? "+" : "";
-    
-    const currentString = typeof input === 'number' ? prefix + Math.floor(input).toLocaleString('en-US') : input;
+    let currentString = typeof input === 'number' ? (isGain ? "+" : "") + Math.floor(input).toLocaleString('en-US') : input;
     
     if (currentString.length !== targetState.lastString.length) {
         targetState.element.innerHTML = '';
@@ -272,41 +241,34 @@ function updateOdometer(type, input) {
     digitsOnly.forEach((num, i) => {
         const roll = digitRolls[i];
         if (roll) {
-            const targetNum = parseInt(num, 10);
-            roll.style.transform = `translateY(-${targetNum * 1.1}em)`;
+            roll.style.transform = `translateY(-${parseInt(num, 10) * 1.1}em)`;
         }
     });
 
     targetState.lastString = currentString;
 }
 
-// Memory-efficient snapshot function
 function saveSnapshot(key, value) {
     let history = JSON.parse(localStorage.getItem(key)) || [];
     const now = Date.now();
-    
-    // Save a new data point every 60 seconds
     if (history.length === 0 || now - history[history.length - 1].t >= 60000) {
         history.push({ t: now, v: value });
-        // Keep 25 hours of data to ensure the 24h lookup always has a reference
         history = history.filter(entry => entry.t > now - 90000000);
         localStorage.setItem(key, JSON.stringify(history));
     }
 }
 
-// Sliding window logic: compares NOW to exactly (msAgo) in history
 function getSlidingGain(historyKey, currentVal, msAgo) {
     let history = JSON.parse(localStorage.getItem(historyKey)) || [];
-    if (history.length === 0) return 0;
+    if (history.length === 0) return 0; // Fixes NaN by returning 0 if no history
     
     const targetTime = Date.now() - msAgo;
-    
-    // Find the snapshot that is closest to our look-back target (e.g. 11:01 AM for 12:01 PM)
     const oldEntry = history.reduce((prev, curr) => {
         return (Math.abs(curr.t - targetTime) < Math.abs(prev.t - targetTime) ? curr : prev);
     });
 
-    return currentVal - oldEntry.v;
+    const gain = currentVal - oldEntry.v;
+    return isNaN(gain) ? 0 : gain; // Double safety check for NaN
 }
 
 async function fetchSubs() {
@@ -317,17 +279,12 @@ async function fetchSubs() {
 
         saveSnapshot('subHistory', estSub);
 
-        // Calculate Sliding Gains: 3600000ms (1h) and 86400000ms (24h)
-        const hrGain = getSlidingGain('subHistory', estSub, 3600000);
-        const dayGain = getSlidingGain('subHistory', estSub, 86400000);
-        const nextMilestone = Math.ceil((estSub + 1) / 1000000) * 1000000;
-
         updateOdometer('sub', estSub);
         updateOdometer('apiSub', data.counters.api.subscriberCount);
-        updateOdometer('milestone', nextMilestone - estSub);
-        updateOdometer('hourGain', hrGain);
-        updateOdometer('dayGain', dayGain);
-    } catch (err) { console.error("Sub API Error"); }
+        updateOdometer('milestone', (Math.ceil((estSub + 1) / 1000000) * 1000000) - estSub);
+        updateOdometer('hourGain', getSlidingGain('subHistory', estSub, 3600000));
+        updateOdometer('dayGain', getSlidingGain('subHistory', estSub, 86400000));
+    } catch (err) { console.error("Sub Error"); }
 }
 
 async function fetchViews() {
@@ -338,31 +295,26 @@ async function fetchViews() {
 
         saveSnapshot('viewHistory', estView);
 
-        const vHrGain = getSlidingGain('viewHistory', estView, 3600000);
-        const vDayGain = getSlidingGain('viewHistory', estView, 86400000);
-
         updateOdometer('apiView', data.counters.api.viewCount);
         updateOdometer('view', estView);
-        updateOdometer('viewHourGain', vHrGain);
-        updateOdometer('viewDayGain', vDayGain);
-    } catch (err) { console.error("View API Error"); }
+        updateOdometer('viewHourGain', getSlidingGain('viewHistory', estView, 3600000));
+        updateOdometer('viewDayGain', getSlidingGain('viewHistory', estView, 86400000));
+    } catch (err) { console.error("View Error"); }
 }
 
 function updateClock() {
     const now = new Date();
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const timeString = `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()} at ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    const timeString = `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()} at ${now.toLocaleTimeString('en-GB')}`;
     updateOdometer('clock', timeString);
 }
 
-fetchSubs();
-fetchViews();
-updateClock();
-
+fetchSubs(); fetchViews(); updateClock();
 setInterval(fetchSubs, 2000); 
 setInterval(fetchViews, 5000); 
 setInterval(updateClock, 1000);
 </script>
 </body>
 </html>
+
