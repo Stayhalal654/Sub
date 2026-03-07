@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Live - Smooth Odometer</title>
+<title>MrBeast Live - Classic Snap Odometer</title>
 <style>
     @font-face {
         font-family: 'YouTubeSans';
@@ -30,7 +30,7 @@
         flex-direction: column;
         align-items: center;
         width: 100%;
-        animation: swipeUp 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        animation: swipeUp 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
 
     @keyframes swipeUp {
@@ -97,11 +97,10 @@
     .small-odometer { font-size: clamp(23px, 5.5vw, 45px); }
     #date-time { font-size: clamp(16px, 3.5vw, 26px); }
 
-    /* --- SMOOTHING & SPACING TWEAKS --- */
     .digit-container {
         overflow: hidden;
         height: 1.11em;
-        width: 0.72em; /* Widened from 0.68em to fix the number squish */
+        width: 0.78em; 
         position: relative;
         display: inline-block;
         transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -112,7 +111,8 @@
         top: 0;
         left: 0;
         width: 100%;
-        transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); /* Slowed to 1.5s with a smoother easing curve */
+        /* Reverted back to the original snappy 0.8s animation style */
+        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
         will-change: transform;
     }
 
@@ -128,11 +128,11 @@
         align-items: center;
         justify-content: center;
         height: 1.11em;
-        width: auto; /* Changed to auto so text/commas fit perfectly */
-        padding: 0 0.05em; /* Adds just a tiny bit of breathing room */
+        width: auto; 
+        padding: 0 0.05em; 
         font-weight: 900;
         transition: width 0.3s, opacity 0.3s;
-        white-space: pre; /* Ensures space characters don't get deleted */
+        white-space: pre; 
     }
 
     .label {
@@ -165,7 +165,7 @@
 
     <div class="content-wrapper">
         <div class="header">
-            <img src="https://yt3.ggpht.com/fxGkyWwc9_ubvHS9Sk6E8V2W_uY7Y_C9089p6S9U9Yj_j8y3y8f_YjJ5A7-Vb_R8fVj8V8V8=s176-c-k-c0x00ffffff-no-rj" alt="MrBeast">
+            <img src="https://yt3.googleusercontent.com/nxYrc_1_2f77DoBadyxMTmv7ZpRZapHR5jbuYe7PlPd5cIRJxtNNEYyOC0ZsxaDyJJzXrnJiuDE=s160-c-k-c0x00ffffff-no-rj" alt="MrBeast">
             MrBeast
         </div>
 
@@ -249,7 +249,7 @@ function createStaticChar(char) {
     const span = document.createElement('span');
     span.className = 'static-char';
     if (char === ' ') {
-        span.innerHTML = '&nbsp;'; // Fixes the space collapsing issue in the clock
+        span.innerHTML = ' '; 
     } else {
         span.textContent = char;
     }
