@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Live - Fixed Alignment</title>
+<title>MrBeast Live - Smooth Odometer</title>
 <style>
     @font-face {
         font-family: 'YouTubeSans';
@@ -17,7 +17,7 @@
         font-family: 'YouTubeSans', 'Roboto', sans-serif;
         display: flex;
         flex-direction: column;
-        align-items: center; /* Keep body centered */
+        align-items: center;
         min-height: 100vh;
         margin: 0;
         overflow-y: auto;
@@ -32,7 +32,6 @@
         width: 100%;
         max-width: 1000px;
         position: relative;
-        /* THE NUDGE: Moves the entire dashboard left without breaking internal layouts */
         left: -20px; 
         animation: swipeUp 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
@@ -51,7 +50,6 @@
         font-weight: 500; 
         margin-bottom: clamp(50px, 8vh, 90px);
         text-transform: uppercase;
-        /* Counter-nudge the header so the profile pic stays centered to the screen if you prefer */
         position: relative;
         left: 20px; 
     }
@@ -66,7 +64,7 @@
     .main-stat-section {
         display: flex;
         flex-direction: column;
-        align-items: center; /* Restore centering */
+        align-items: center;
         justify-content: center;
         width: 100%;
         margin-bottom: clamp(40px, 8vh, 80px);
@@ -85,7 +83,7 @@
     .stat-section {
         display: flex;
         flex-direction: column;
-        align-items: center; /* Restore internal centering */
+        align-items: center;
         justify-content: center;
         width: 100%;
     }
@@ -93,7 +91,7 @@
     .odometer {
         display: flex;
         align-items: center;
-        justify-content: center; /* Restore centering */
+        justify-content: center;
         font-weight: 900; 
         letter-spacing: -1px;
         line-height: 1;
@@ -104,13 +102,14 @@
     .small-odometer { font-size: clamp(25px, 6vw, 50px); }
     #date-time { font-size: clamp(16px, 3.5vw, 24px); }
 
+    /* FIXED CONTAINER: Added smooth width and opacity transitions */
     .digit-container {
         overflow: hidden;
-        height: 1.21em; /* Matches line-height exactly to prevent jumping */
-        width: 0.70em; /* Slightly wider to prevent overlapping digits */
+        height: 1.21em; 
+        width: 0.70em; 
         position: relative;
         display: inline-block;
-        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
     }
 
     .digit-roll {
@@ -124,18 +123,19 @@
 
     .digit-roll span {
         display: block;
-        line-height: 1.1em; /* Absolute sync with container height */
+        line-height: 1.1em;
         text-align: center;
         font-weight: 900;
     }
 
+    /* FIXED STATIC CHAR: Added smooth width transitions for commas/signs */
     .static-char {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        height: 1.1em;
-        width: auto; 
-        padding: 0 0.05em; 
+        height: 1.21em;
+        overflow: hidden;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
         font-weight: 900;
         white-space: pre; 
     }
@@ -222,7 +222,6 @@
     </div>
 
 <script>
-// ... (Script remains exactly the same as your working version)
 const API_URL = 'https://api.socialcounts.org/youtube-live-subscriber-count/UCX6OQ3DkcsbYNE6H8uQQuVA';
 const state = {
     sub: { lastString: "", element: document.getElementById('sub-odometer') },
@@ -240,6 +239,8 @@ const state = {
 function createDigit() {
     const container = document.createElement('div');
     container.className = 'digit-container';
+    container.style.width = "0px";
+    container.style.opacity = "0";
     const roll = document.createElement('div');
     roll.className = 'digit-roll';
     for (let n = 0; n <= 9; n++) {
@@ -254,40 +255,84 @@ function createDigit() {
 function createStaticChar(char) {
     const span = document.createElement('span');
     span.className = 'static-char';
-    if (char === ' ') { span.innerHTML = ' '; } 
-    else { span.textContent = char; }
+    span.style.width = "0px";
+    span.style.opacity = "0";
+    span.textContent = char === ' ' ? '\u00A0' : char;
     return span;
 }
 
 function updateOdometer(type, input) {
     const targetState = state[type];
     if (!targetState || !targetState.element) return;
+
     const isGain = type.toLowerCase().includes('gain');
-    const prefix = isGain ? "+" : "";
-    const currentString = typeof input === 'number' ? prefix + Math.floor(input).toLocaleString('en-US') : input;
-    if (currentString === targetState.lastString) return;
-    const currentChars = [...currentString];
-    const element = targetState.element;
-    if (element.children.length !== currentChars.length) {
-        element.innerHTML = '';
-        currentChars.forEach(char => {
-            if (isNaN(parseInt(char, 10))) { element.appendChild(createStaticChar(char)); } 
-            else { element.appendChild(createDigit()); }
-        });
+    const isClock = type === 'clock';
+    
+    let currentString = "";
+    if (typeof input === 'number') {
+        const prefix = isGain && input >= 0 ? "+" : (input < 0 ? "-" : "");
+        currentString = prefix + Math.floor(Math.abs(input)).toLocaleString('en-US');
+    } else {
+        currentString = input;
     }
-    const digitRolls = element.querySelectorAll('.digit-roll');
-    let digitIdx = 0;
+
+    if (currentString === targetState.lastString) return;
+    
+    const element = targetState.element;
+    const currentChars = [...currentString];
+
+    // 1. ADD missing elements to the LEFT
+    while (element.children.length < currentChars.length) {
+        const dummy = document.createElement('span');
+        dummy.style.width = "0px";
+        element.insertBefore(dummy, element.firstChild);
+    }
+
+    // 2. REMOVE excess elements from the LEFT
+    while (element.children.length > currentChars.length) {
+        element.removeChild(element.firstChild);
+    }
+
+    // 3. MORPH elements into correct types
+    const children = element.children;
     currentChars.forEach((char, i) => {
         const isNum = !isNaN(parseInt(char, 10));
-        if (isNum) {
-            const roll = digitRolls[digitIdx];
-            if (roll) {
-                const targetNum = parseInt(char, 10);
-                roll.style.transform = `translateY(-${targetNum * 1.1}em)`;
-            }
-            digitIdx++;
+        let child = children[i];
+
+        if (isNum && !child.classList.contains('digit-container')) {
+            const newDigit = createDigit();
+            element.replaceChild(newDigit, child);
+        } else if (!isNum && !child.classList.contains('static-char')) {
+            const newChar = createStaticChar(char);
+            element.replaceChild(newChar, child);
+        } else if (!isNum && child.classList.contains('static-char')) {
+            child.textContent = char === ' ' ? '\u00A0' : char;
         }
     });
+
+    // 4. TRIGGER Animation
+    void element.offsetWidth; // Force Reflow
+
+    const finalChildren = element.children;
+    currentChars.forEach((char, i) => {
+        const child = finalChildren[i];
+        const isNum = !isNaN(parseInt(char, 10));
+
+        if (isNum) {
+            child.style.width = "0.70em";
+            child.style.opacity = "1";
+            const roll = child.querySelector('.digit-roll');
+            if (roll) {
+                roll.style.transform = `translateY(-${parseInt(char, 10) * 1.1}em)`;
+            }
+        } else {
+            // Adjust width for commas/spaces vs larger signs (+/-)
+            const w = (char === ',' || char === ' ') ? "0.3em" : (isClock ? "auto" : "0.5em");
+            child.style.width = w;
+            child.style.opacity = "1";
+        }
+    });
+
     targetState.lastString = currentString;
 }
 
@@ -303,12 +348,11 @@ async function fetchSubData() {
         localStorage.setItem('subHistory', JSON.stringify(history));
         const hEntry = history.find(e => e.t >= now - 3600000) || history[0];
         const currentHourGain = estSub - hEntry.c;
-        const averageDayGain = currentHourGain * 24;
         updateOdometer('sub', estSub);
         updateOdometer('apiSub', data.counters.api.subscriberCount);
         updateOdometer('milestone', (Math.ceil((estSub + 1) / 1000000) * 1000000) - estSub);
         updateOdometer('hourGain', currentHourGain);
-        updateOdometer('dayGain', averageDayGain);
+        updateOdometer('dayGain', currentHourGain * 24);
     } catch (err) {}
 }
 
@@ -324,11 +368,10 @@ async function fetchViewData() {
         localStorage.setItem('viewHistory', JSON.stringify(vHistory));
         const vhEntry = vHistory.find(e => e.t >= now - 3600000) || vHistory[0];
         const currentViewHourGain = estView - vhEntry.c;
-        const averageViewDayGain = currentViewHourGain * 24;
         updateOdometer('apiView', data.counters.api.viewCount);
         updateOdometer('view', estView);
         updateOdometer('viewHourGain', currentViewHourGain);
-        updateOdometer('viewDayGain', averageViewDayGain);
+        updateOdometer('viewDayGain', currentViewHourGain * 24);
     } catch (err) {}
 }
 
