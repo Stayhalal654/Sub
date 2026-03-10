@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MrBeast Live - Rainbow Dashboard</title>
+<style>
+    @font-face {
+        font-family: 'YouTubeSans';
+        src: url('InterDisplay-ExtraBold.ttf') format('truetype');
+        font-weight: 400 900;
+    }
+
+    body {
+        background-color: #000000; 
+        color: #ffffff;
+        font-family: 'YouTubeSans', 'Roboto', sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 60px 20px;
+        overflow-x: hidden;
+    }
+
+    .content-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 1250px; 
+        animation: fadeIn 1.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header {
+        display: flex;
+        flex-direction: column; 
+        align-items: center;
+        gap: 10px; 
+        margin-bottom: 40px;
+    }
+
+    .header img {
+        width: 200px; 
+        height: 200px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+    }
+
+    .main-display {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+    #sub-odometer {
+        font-size: clamp(80px, 15vw, 180px);
+        font-weight: 900;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr); 
+        gap: 20px;
+        width: 100%;
+    }
+
+    .stat-box {
+        position: relative;
+        background: linear-gradient(270deg, red, orange, yellow, green, blue, purple);
+        background-size: 500% 500%;
+        animation: rainbow 20s ease infinite;
+        padding: 40px 10px;
+        border-radius: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .stat-box::after {
+        content: '';
+        position: absolute;
+        inset: 4px; 
+        background: #0d0d0d;
+        border-radius: 20px;
+        z-index: -1;
+    }
+
+    @keyframes rainbow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .col-small { grid-column: span 2; } 
+    .col-wide { grid-column: span 6; } 
+
+    .small-odometer {
+        font-size: clamp(30px, 4.5vw, 58px);
+        font-weight: 900;
+        margin-bottom: 10px;
+        white-space: nowrap;
+    }
+
+    .box-label {
+        font-size: 25px; 
+        color: #ffffff;  
+        text-transform: uppercase;
+        margin-top: 20px;
+        letter-spacing: 1.55px;
+        font-weight: 950;
+        opacity: 1;      
+        text-align: center;
+        text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5); 
+    }
+
+    .odometer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .digit-container {
+        overflow: hidden;
+        height: 1.1em; 
+        width: 0.70em;
+        position: relative;
+        display: inline-block;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    }
+
+    .digit-roll {
+        position: absolute;
+        top: 0; left: 0; width: 100%;
+        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+        will-change: transform;
+    }
+
+    .digit-roll span {
+        display: block;
+        line-height: 1.1em;
+        text-align: center;
+    }
+
+    .static-char {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 1.1em;
+        overflow: hidden;
+        transition: width 0.5s ease, opacity 0.3s ease;
+        white-space: pre; 
+    }
+
+    /* COLORS */
+    .cyan { color: #00c3ff; }
+    .pink { color: #ff007f; }
+    .white { color: #ffffff; }
+    
+    /* NEW LIME NEON STYLE */
+    .lime-neon { 
+        color: #32ff32; 
+        text-shadow: 0 0 10px rgba(50, 255, 50, 0.6), 0 0 20px rgba(50, 255, 50, 0.4);
+    }
+
+    #clock-container {
+        margin-top: 70px;
+    }
+
+    @media (max-width: 900px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .col-small, .col-wide { grid-column: span 1; }
+    }
+</style>
+</head>
+<body>
+
+    <div class="content-wrapper">
+        <div class="header">
+            <img src="https://yt3.googleusercontent.com/nxYrc_1_2f77DoBadyxMTmv7ZpRZapHR5jbuYe7PlPd5cIRJxtNNEYyOC0ZsxaDyJJzXrnJiuDE=s160-c-k-c0x00ffffff-no-rj" alt="MrBeast">
+            <div class="box-label">MrBeast</div>
+        </div>
+
+        <div class="main-display">
+            <div id="sub-odometer" class="odometer white"></div>
+            <div class="box-label"> 📈 TOTAL SUBSCRIBERS (ESTIMATED)</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box col-small">
+                <div id="api-sub-odometer" class="odometer small-odometer cyan"></div>
+                <div class="box-label"> 📊 TOTAL SUBS (API)</div>
+            </div>
+            <div class="stat-box col-small">
+                <div id="milestone-odometer" class="odometer small-odometer pink"></div>
+                <div class="box-label"> 🎯 NEXT GOAL</div>
+            </div>
+            <div class="stat-box col-small">
+                <div id="hour-gain-odometer" class="odometer small-odometer lime-neon"></div>
+                <div class="box-label"> 🕛 SUBS PER HOUR</div>
+            </div>
+
+            <div class="stat-box col-wide">
+                <div id="view-odometer" class="odometer small-odometer white"></div>
+                <div class="box-label"> 👀 TOTAL VIEWS (EST)</div>
+            </div>
+        </div>
+
+        <div id="clock-container">
+            <div id="date-time" class="odometer" style="font-weight: 900;"></div>
+            <div class="box-label">LOCAL DATE & TIME (24H)</div>
+        </div>
+    </div>
+
+<script>
+const API_URL = 'https://api.socialcounts.org/youtube-live-subscriber-count/UCX6OQ3DkcsbYNE6H8uQQuVA';
+const state = {
+    sub: { lastString: "", element: document.getElementById('sub-odometer') },
+    apiSub: { lastString: "", element: document.getElementById('api-sub-odometer') },
+    view: { lastString: "", element: document.getElementById('view-odometer') },
+    milestone: { lastString: "", element: document.getElementById('milestone-odometer') },
+    hourGain: { lastString: "", element: document.getElementById('hour-gain-odometer') },
+    clock: { lastString: "", element: document.getElementById('date-time') }
+};
+
+function createDigit() {
+    const container = document.createElement('div');
+    container.className = 'digit-container';
+    container.style.width = "0px";
+    container.style.opacity = "0";
+    const roll = document.createElement('div');
+    roll.className = 'digit-roll';
+    for (let n = 0; n <= 9; n++) {
+        const span = document.createElement('span');
+        span.textContent = n;
+        roll.appendChild(span);
+    }
+    container.appendChild(roll);
+    return container;
+}
+
+function createStaticChar(char) {
+    const span = document.createElement('span');
+    span.className = 'static-char';
+    span.style.width = "0px";
+    span.style.opacity = "0";
+    span.textContent = char === ' ' ? '\u00A0' : char;
+    return span;
+}
+
+function updateOdometer(type, input) {
+    const targetState = state[type];
+    if (!targetState || !targetState.element) return;
+
+    const isGain = type.toLowerCase().includes('gain');
+    let currentString = "";
+    if (typeof input === 'number') {
+        const prefix = isGain && input >= 0 ? "+" : (input < 0 ? "-" : "");
+        currentString = prefix + Math.floor(Math.abs(input)).toLocaleString('en-US');
+    } else {
+        currentString = input;
+    }
+
+    if (currentString === targetState.lastString) return;
+    const element = targetState.element;
+    const currentChars = [...currentString];
+
+    while (element.children.length < currentChars.length) {
+        element.insertBefore(document.createElement('span'), element.firstChild);
+    }
+    while (element.children.length > currentChars.length) {
+        element.removeChild(element.firstChild);
+    }
+
+    const children = element.children;
+    currentChars.forEach((char, i) => {
+        const isNum = !isNaN(parseInt(char, 10));
+        let child = children[i];
+        if (isNum && !child.classList.contains('digit-container')) {
+            element.replaceChild(createDigit(), child);
+        } else if (!isNum && !child.classList.contains('static-char')) {
+            element.replaceChild(createStaticChar(char), child);
+        }
+    });
+
+    void element.offsetWidth; 
+
+    const finalChildren = element.children;
+    currentChars.forEach((char, i) => {
+        const child = finalChildren[i];
+        const isNum = !isNaN(parseInt(char, 10));
+        if (isNum) {
+            child.style.width = "0.65em"; 
+            child.style.opacity = "1";
+            const roll = child.querySelector('.digit-roll');
+            if (roll) roll.style.transform = `translateY(-${parseInt(char, 10) * 1.1}em)`;
+        } else {
+            child.style.width = (char === ',' || char === ' ') ? "0.25em" : "0.45em";
+            child.style.opacity = "1";
+        }
+    });
+    targetState.lastString = currentString;
+}
+
+async function fetchSubs() {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        const estSub = data.counters.estimation.subscriberCount;
+        const now = Date.now();
+
+        let history = JSON.parse(localStorage.getItem('mb_history_subs')) || [];
+        history.push({ t: now, s: estSub });
+        history = history.filter(e => e.t > now - 3600000);
+        localStorage.setItem('mb_history_subs', JSON.stringify(history));
+
+        const old = history[0];
+        const hourSubGain = estSub - old.s;
+
+        updateOdometer('sub', estSub);
+        updateOdometer('apiSub', data.counters.api.subscriberCount);
+        updateOdometer('milestone', (Math.ceil((estSub + 1) / 1000000) * 1000000) - estSub);
+        updateOdometer('hourGain', hourSubGain);
+    } catch (e) {}
+}
+
+async function fetchViews() {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        updateOdometer('view', data.counters.estimation.viewCount);
+    } catch (e) {}
+}
+
+function updateClock() {
+    const now = new Date();
+    updateOdometer('clock', now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false}));
+}
+
+setInterval(fetchSubs, 2000);
+setInterval(fetchViews, 5000);
+setInterval(updateClock, 1000);
+
+fetchSubs();
+fetchViews();
+updateClock();
+</script>
+</body>
+</html>
