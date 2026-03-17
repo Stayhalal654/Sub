@@ -72,12 +72,12 @@
         width: 100%;
     }
 
-    .stat-box {
+        .stat-box {
         position: relative;
         background: linear-gradient(270deg, red, orange, yellow, green, blue, purple);
         background-size: 550% 550%;
         animation: rainbow 20s ease infinite;
-        padding: 40x 10px;
+        padding: 40px 10px; /* ⬅️ FIXED TYPO HERE: Changed 40x to 40px */
         border-radius: 30px;
         display: flex;
         flex-direction: column;
@@ -85,6 +85,15 @@
         justify-content: center;
         overflow: hidden;
         z-index: 1;
+    }
+
+    .stat-box::after {
+        content: '';
+        position: absolute;
+        inset: 8px; /* ⬅️ INCREASED THIS from 4px to 8px to make the rainbow bold */
+        background: #0d0d0d; /* Inner background color */
+        border-radius: 22px; /* ⬅️ Adjusted this slightly to keep the corners perfectly round with the thicker border */
+        z-index: -1;
     }
 
     .stat-box::after {
